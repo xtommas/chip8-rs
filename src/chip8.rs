@@ -24,10 +24,10 @@ impl Chip8 {
         chip8
     }
 
-    // loads the fontset from 0x000 to 0x050
+    // loads the fontset from 0x050 to 0x09F
     fn load_font_set(&mut self) {
-        for (i, &byte) in font::FONT_SET.iter().enumerate() {
-            self.memory[i] = byte;
+        for i in 80..160 {
+            self.memory[i] = font::FONT_SET[i - 80];
         }
     }
 }
