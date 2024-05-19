@@ -1,19 +1,19 @@
 #[derive(Debug)]
 pub struct Cpu {
     // 16 8-bit registers, from V0 to VF
-    v: [u8; 16],
+    pub v: [u8; 16],
     // 16-bit index register
-    i: u16,
+    pub i: u16,
     // 16-bit program counter
-    pc: u16,
+    pub pc: u16,
     // 8-bit stack pointer
-    sp: u8,
+    pub sp: u8,
     // Stack that can hold 16 16-bit values
-    stack: Vec<u16>,
+    pub stack: Vec<u16>,
     // 8-bit delay timer
-    delay_timer: u8,
+    pub delay_timer: u8,
     // 8-bit sound timer
-    sound_timer: u8,
+    pub sound_timer: u8,
 }
 
 impl Cpu {
