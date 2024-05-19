@@ -59,11 +59,14 @@ impl Chip8 {
                 0x00E0 => {
                     // CLS
                     self.clear_display();
+                    self.draw_flag = true;
+                    self.cpu.pc += 2;
                 }
                 0x00EE => {
                     // RET
                     // return from a subrutine
                     self.return_from_subroutine();
+                    self.cpu.pc += 2;
                 }
                 _ => panic!("Unknown opcode: {:#04x}", opcode),
             },
@@ -98,10 +101,10 @@ impl Chip8 {
     }
 
     fn return_from_subroutine(&mut self) {
-        // set the program counter to the address at
-        // the top of the stack, and decrement the stack
-        // pointer by 1
-        self.cpu.pc = self.cpu.stack[self.cpu.sp as usize];
+        // Decrement sp first, so it points to
+        // the last element of the stack and
+        // assing that element to the program counter
         self.cpu.sp -= 1;
+        self.cpu.pc = self.cpu.stack[self.cpu.sp as usize];
     }
 }
