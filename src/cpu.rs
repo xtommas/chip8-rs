@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Cpu {
     // 16 8-bit registers, from V0 to VF
     v: [u8; 16],

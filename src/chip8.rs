@@ -3,9 +3,10 @@ use crate::{cpu::Cpu, font};
 const DISPLAY_WIDTH: usize = 64;
 const DISPLAY_HEIGHT: usize = 32;
 
+#[derive(Debug)]
 pub struct Chip8 {
     cpu: Cpu,
-    memory: [u8; 4096],
+    pub memory: [u8; 4096],
     display: [i32; DISPLAY_WIDTH * DISPLAY_HEIGHT],
     keypad: [i32; 16],
     draw_flag: bool,
@@ -28,6 +29,16 @@ impl Chip8 {
     fn load_font_set(&mut self) {
         for i in 80..160 {
             self.memory[i] = font::FONT_SET[i - 80];
+        }
+    }
+
+    pub fn load_rom(&mut self, file_path: &String) {
+        let bytes = std::fs::read(file_path).expect("No such file or directory");
+        // Programs start at memory address 0x200 (512)
+        let mut i = 512;
+        for byte in bytes.iter() {
+            self.memory[i] = *byte;
+            i += 1;
         }
     }
 }
