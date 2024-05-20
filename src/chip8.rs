@@ -160,11 +160,11 @@ impl Chip8 {
 
         // Loop trough each row
         for y_line in 0..n {
-            let pixel = &mut self.memory[(self.cpu.i + y_line as u16) as usize];
+            let pixel = self.memory[(self.cpu.i + y_line as u16) as usize];
             // Loop through each one of the 8 bits of the row
             for x_line in 0..8 {
                 // Check if the pixel value is 1
-                if (*pixel & (0x80 >> x_line)) != 0 {
+                if (pixel & (0x80 >> x_line)) != 0 {
                     // Get the index for the display array
                     // (Might not need to wrap around on this one, check later)
                     let index = ((x + x_line) as usize + ((y + y_line) as usize * 64)) % 2048;
