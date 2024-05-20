@@ -59,18 +59,20 @@ impl Chip8 {
                 0x00E0 => {
                     // CLS
                     self.clear_display();
-                    self.draw_flag = true;
-                    self.cpu.pc += 2;
                 }
                 0x00EE => {
                     // RET
                     // return from a subrutine
                     self.return_from_subroutine();
-                    self.cpu.pc += 2;
                 }
                 _ => panic!("Unknown opcode: {:#04x}", opcode),
             },
-            1 => {}
+            1 => {
+                // JP (jump)
+                // mask the last three bits to get the address to jump to
+                let addr = opcode & 0x0FFF;
+                self.jump(addr);
+            }
             2 => {}
             3 => {}
             4 => {}
@@ -98,13 +100,20 @@ impl Chip8 {
         for pixel in self.display.iter_mut() {
             *pixel = 0;
         }
+        self.draw_flag = true;
+        self.cpu.pc += 2;
     }
 
     fn return_from_subroutine(&mut self) {
         // Decrement sp first, so it points to
         // the last element of the stack and
-        // assing that element to the program counter
+        // assign that element to the program counter
         self.cpu.sp -= 1;
-        self.cpu.pc = self.cpu.stack[self.cpu.sp as usize];
+        self.cpu.pc = self.cpu.stack.pop().expect("Illegal stack access");
+        self.cpu.pc += 2;
+    }
+
+    fn jump(&mut self, addr: u16) {
+        self.cpu.pc = addr;
     }
 }
