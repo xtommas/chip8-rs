@@ -68,17 +68,26 @@ impl Chip8 {
                 _ => panic!("Unknown opcode: {:#04x}", opcode),
             },
             1 => {
-                // JP (jump)
+                // JP addr (jump)
                 // mask the last three bits to get the address to jump to
-                let addr = opcode & 0x0FFF;
+                let addr = (opcode & 0x0FFF) as u16;
                 self.jump(addr);
             }
             2 => {}
             3 => {}
             4 => {}
             5 => {}
-            6 => {}
-            7 => {}
+            6 => {
+                // LD Vx, byte
+                let reg: u8 = (opcode & 0x0F00) as u8;
+                let value: u8 = (opcode & 0x00FF) as u8;
+                self.load_register_vx(reg, value);
+            }
+            7 => {
+                let reg: u8 = (opcode & 0x0F00) as u8;
+                let value: u8 = (opcode & 0x00FF) as u8;
+                self.add_value_to_register_vx(reg, value);
+            }
             8 => {}
             9 => {}
             10 => {}
@@ -115,5 +124,15 @@ impl Chip8 {
 
     fn jump(&mut self, addr: u16) {
         self.cpu.pc = addr;
+    }
+
+    fn load_register_vx(&mut self, reg: u8, val: u8) {
+        self.cpu.v[reg as usize] = val;
+        self.cpu.pc += 2;
+    }
+
+    fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
+        self.cpu.v[reg as usize] += val;
+        self.cpu.pc += 2;
     }
 }
