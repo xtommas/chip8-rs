@@ -11,7 +11,7 @@ pub struct Chip8 {
     memory: [u8; 4096],
     display: [i32; DISPLAY_WIDTH * DISPLAY_HEIGHT],
     keypad: [i32; 16],
-    draw_flag: bool,
+    pub draw_flag: bool,
 }
 
 impl Chip8 {
@@ -49,7 +49,7 @@ impl Chip8 {
         // An instruction is 2 bytes, so we need to read two consecutive bytes
         // from memory and combine them into one 16-bit instruction
         let opcode: u16 =
-            self.memory[self.cpu.pc as usize] << 8 | self.memory[self.cpu.pc as usize + 1];
+            (self.memory[self.cpu.pc as usize] << 8 | self.memory[self.cpu.pc as usize + 1]).into();
 
         // Decode opcode
         // the bitwise & creates a mask to get the first 4 bits of the instruction
@@ -153,18 +153,26 @@ impl Chip8 {
     }
 
     fn draw_sprite_to_screen(&mut self, inst_x: u8, inst_y: u8, n: u8) {
+        // Mod by display width (64) or height (32) to wrap around
         let x = self.cpu.v[inst_x as usize] % 64;
         let y = self.cpu.v[inst_y as usize] % 32;
-        self.cpu.v[15] = 0;
+        self.cpu.v[0x0F] = 0;
 
+        // Loop trough each row
         for y_line in 0..n {
             let pixel = &mut self.memory[(self.cpu.i + y_line as u16) as usize];
+            // Loop through each one of the 8 bits of the row
             for x_line in 0..8 {
+                // Check if the pixel value is 1
                 if (*pixel & (0x80 >> x_line)) != 0 {
-                    let index = ((x + x_line) + ((y + y_line) * 64)) % 2048;
+                    // Get the index for the display array
+                    // (Might not need to wrap around on this one, check later)
+                    let index = ((x + x_line) as usize + ((y + y_line) as usize * 64)) % 2048;
+                    // Check if the pixel is alrady active (collision)
                     if self.display[index as usize] == 1 {
-                        self.cpu.v[15] = 1;
+                        self.cpu.v[0x0F] = 1;
                     }
+                    // set the pixel value using XOR
                     self.display[index as usize] ^= 1;
                 }
             }
