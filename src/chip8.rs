@@ -48,13 +48,22 @@ impl Chip8 {
         // Fetch opcode
         // An instruction is 2 bytes, so we need to read two consecutive bytes
         // from memory and combine them into one 16-bit instruction
-        let opcode: u16 =
-            (self.memory[self.cpu.pc as usize] << 8 | self.memory[self.cpu.pc as usize + 1]).into();
+        let opcode: u16 = u16::from(self.memory[self.cpu.pc as usize]) << 8
+            | u16::from(self.memory[self.cpu.pc as usize + 1]);
 
         // Decode opcode
         // the bitwise & creates a mask to get the first 4 bits of the instruction
-        // for example: 0xANNN & 0xF000 will yield A
-        match opcode & 0xF000 {
+        // for example: 0xANNN & 0xF000 will yield 0xA000, so we need to shift >> 12
+        // to get 0xA
+        println!(
+            "Current opcode: {:#x} first bit: {:#x} second bit: {:#x} third bit: {:#x} fourth bit: {:#x}",
+            opcode,
+            (opcode & 0xF000) >> 12, 
+            (opcode & 0x0F00) >> 8, 
+            (opcode & 0x00F0) >> 4, 
+            opcode & 0x000F, 
+        );
+        match (opcode & 0xF000) >> 12 {
             0 => match opcode {
                 0x00E0 => {
                     // CLS
@@ -65,7 +74,7 @@ impl Chip8 {
                     // return from a subrutine
                     self.return_from_subroutine();
                 }
-                _ => panic!("Unknown opcode: {:#04x}", opcode),
+                _ => panic!("Unknown opcode starting with 0: {:#04x}", opcode),
             },
             1 => {
                 // JP addr (jump)
@@ -79,13 +88,13 @@ impl Chip8 {
             5 => {}
             6 => {
                 // LD Vx, byte
-                let reg: u8 = (opcode & 0x0F00) as u8;
+                let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
                 let value: u8 = (opcode & 0x00FF) as u8;
                 self.load_register_vx(reg, value);
             }
             7 => {
                 // ADD Vx, byte
-                let reg: u8 = (opcode & 0x0F00) as u8;
+                let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
                 let value: u8 = (opcode & 0x00FF) as u8;
                 self.add_value_to_register_vx(reg, value);
             }
@@ -101,13 +110,13 @@ impl Chip8 {
             13 => {
                 // DXYN (draw srpite to the screen)
                 let n = (opcode & 0x000F) as u8;
-                let x = (opcode & 0x0F00) as u8;
-                let y = (opcode & 0x00F0) as u8;
+                let x = ((opcode & 0x0F00) >> 8) as u8;
+                let y = ((opcode & 0x00F0) >> 4) as u8;
                 self.draw_sprite_to_screen(x, y, n);
             }
             14 => {}
             15 => {}
-            _ => panic!("Unknown opcode: {:#04x}", opcode),
+            _ => panic!("Unknown opcode: {:#x}", opcode),
         }
 
         // Update timers

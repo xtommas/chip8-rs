@@ -1,4 +1,5 @@
 use chip8_rs::chip8::Chip8;
+use core::panic;
 use std::env;
 
 fn main() {
@@ -7,6 +8,9 @@ fn main() {
 
     let mut chip8 = Chip8::new();
     let args: Vec<String> = env::args().collect();
+    if args.len() == 1 {
+        panic!("Provide the path to the rom to run as the first argument");
+    }
     let rom = &args[1];
     chip8.load_rom(rom);
 
