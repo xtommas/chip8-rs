@@ -90,7 +90,10 @@ impl Chip8 {
             }
             8 => {}
             9 => {}
-            10 => {}
+            10 => {
+                let value: u16 = (opcode & 0x0FFF) as u16;
+                self.set_index_register(value);
+            }
             11 => {}
             12 => {}
             13 => {}
@@ -133,6 +136,11 @@ impl Chip8 {
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
         self.cpu.v[reg as usize] += val;
+        self.cpu.pc += 2;
+    }
+
+    fn set_index_register(&mut self, val: u16) {
+        self.cpu.i = val;
         self.cpu.pc += 2;
     }
 }
