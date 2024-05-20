@@ -84,6 +84,7 @@ impl Chip8 {
                 self.load_register_vx(reg, value);
             }
             7 => {
+                // ADD Vx, byte
                 let reg: u8 = (opcode & 0x0F00) as u8;
                 let value: u8 = (opcode & 0x00FF) as u8;
                 self.add_value_to_register_vx(reg, value);
@@ -91,12 +92,19 @@ impl Chip8 {
             8 => {}
             9 => {}
             10 => {
+                // LD I, addr
                 let value: u16 = (opcode & 0x0FFF) as u16;
                 self.set_index_register(value);
             }
             11 => {}
             12 => {}
-            13 => {}
+            13 => {
+                // DXYN (draw srpite to the screen)
+                let n = (opcode & 0x000F) as u8;
+                let x = (opcode & 0x0F00) as u8;
+                let y = (opcode & 0x00F0) as u8;
+                self.draw_sprite_to_screen(x, y, n);
+            }
             14 => {}
             15 => {}
             _ => panic!("Unknown opcode: {:#04x}", opcode),
@@ -141,6 +149,28 @@ impl Chip8 {
 
     fn set_index_register(&mut self, val: u16) {
         self.cpu.i = val;
+        self.cpu.pc += 2;
+    }
+
+    fn draw_sprite_to_screen(&mut self, inst_x: u8, inst_y: u8, n: u8) {
+        let x = self.cpu.v[inst_x as usize] % 64;
+        let y = self.cpu.v[inst_y as usize] % 32;
+        self.cpu.v[15] = 0;
+
+        for y_line in 0..n {
+            let pixel = &mut self.memory[(self.cpu.i + y_line as u16) as usize];
+            for x_line in 0..8 {
+                if (*pixel & (0x80 >> x_line)) != 0 {
+                    let index = ((x + x_line) + ((y + y_line) * 64)) % 2048;
+                    if self.display[index as usize] == 1 {
+                        self.cpu.v[15] = 1;
+                    }
+                    self.display[index as usize] ^= 1;
+                }
+            }
+        }
+
+        self.draw_flag = true;
         self.cpu.pc += 2;
     }
 }
