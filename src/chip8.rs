@@ -9,7 +9,7 @@ const DISPLAY_HEIGHT: usize = 32;
 pub struct Chip8 {
     cpu: Cpu,
     memory: [u8; 4096],
-    display: [i32; DISPLAY_WIDTH * DISPLAY_HEIGHT],
+    pub display: [i32; DISPLAY_WIDTH * DISPLAY_HEIGHT],
     keypad: [i32; 16],
     pub draw_flag: bool,
 }
@@ -52,18 +52,21 @@ impl Chip8 {
             | u16::from(self.memory[self.cpu.pc as usize + 1]);
 
         // Decode opcode
-        // the bitwise & creates a mask to get the first 4 bits of the instruction
-        // for example: 0xANNN & 0xF000 will yield 0xA000, so we need to shift >> 12
-        // to get 0xA
+        //
+        // The bitwise & creates a mask to get the nibble (4 bits) of the instruction
+        // that we need for each case.
+        // For example: 0xANNN & 0xF000 will yield 0xA000, so we need to shift >> 12
+        // to get 0xA.
+        // In the case of the first nibble, shifting right by 12 is enough
         println!(
-            "Current opcode: {:#x} first bit: {:#x} second bit: {:#x} third bit: {:#x} fourth bit: {:#x}",
+            "Current opcode: {:#x} first nibble: {:#x} second nibble: {:#x} third nibble: {:#x} fourth nibble: {:#x}",
             opcode,
-            (opcode & 0xF000) >> 12, 
+            opcode >> 12, 
             (opcode & 0x0F00) >> 8, 
             (opcode & 0x00F0) >> 4, 
             opcode & 0x000F, 
         );
-        match (opcode & 0xF000) >> 12 {
+        match opcode >> 12 {
             0 => match opcode {
                 0x00E0 => {
                     // CLS
