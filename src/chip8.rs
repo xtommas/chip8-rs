@@ -122,7 +122,25 @@ impl Chip8 {
                 let val: u8 = (opcode & 0x00FF) as u8;
                 self.add_value_to_register_vx(reg, val);
             }
-            8 => {}
+            8 => {
+                match opcode & 0x000F {
+                    0 => {
+                        // LD Vx, Vy
+                        let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                        let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
+                        self.set_registers(reg1, reg2);
+                    }
+                    1 => {}
+                    2 => {}
+                    3 => {}
+                    4 => {}
+                    5 => {}
+                    6 => {}
+                    7 => {}
+                    14 => {}
+                    _ => panic!("Unknown operation: {:#x}", opcode),
+                }
+            }
             9 => {
                 // SNE Vx, Vy
                 let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
@@ -205,6 +223,10 @@ impl Chip8 {
 
     fn load_register_vx(&mut self, reg: u8, val: u8) {
         self.cpu.v[reg as usize] = val;
+    }
+
+    fn set_registers(&mut self, reg1: u8, reg2: u8) {
+        self.cpu.v[reg1 as usize] = self.cpu.v[reg2 as usize];
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
