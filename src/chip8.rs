@@ -1,5 +1,4 @@
 use core::panic;
-
 use crate::{cpu::Cpu, font, screen};
 
 
@@ -130,7 +129,12 @@ impl Chip8 {
                         let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
                         self.set_registers(reg1, reg2);
                     }
-                    1 => {}
+                    1 => {
+                        // OR Vx, Vy
+                        let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                        let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
+                        self.or_registers(reg1, reg2);
+                    }
                     2 => {}
                     3 => {}
                     4 => {}
@@ -227,6 +231,10 @@ impl Chip8 {
 
     fn set_registers(&mut self, reg1: u8, reg2: u8) {
         self.cpu.v[reg1 as usize] = self.cpu.v[reg2 as usize];
+    }
+
+    fn or_registers(&mut self, reg1: u8, reg2: u8) {
+        self.cpu.v[reg1 as usize] |= self.cpu.v[reg2 as usize];
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
