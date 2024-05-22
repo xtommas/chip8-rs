@@ -135,7 +135,12 @@ impl Chip8 {
                         let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
                         self.or_registers(reg1, reg2);
                     }
-                    2 => {}
+                    2 => {
+                        // AND Vx, Vy
+                        let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                        let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
+                        self.and_registers(reg1, reg2);
+                    }
                     3 => {}
                     4 => {}
                     5 => {}
@@ -235,6 +240,10 @@ impl Chip8 {
 
     fn or_registers(&mut self, reg1: u8, reg2: u8) {
         self.cpu.v[reg1 as usize] |= self.cpu.v[reg2 as usize];
+    }
+
+    fn and_registers(&mut self, reg1: u8, reg2: u8) {
+        self.cpu.v[reg1 as usize] &= self.cpu.v[reg2 as usize];
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
