@@ -1,39 +1,14 @@
 use chip8_rs::chip8::Chip8;
+use chip8_rs::screen;
 use core::panic;
-use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
+use sdl2::event::Event;
 use std::env;
-
-fn draw_screen(chip8: &Chip8, canvas: &mut Canvas<Window>) {
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-
-    let screen_buf = chip8.display;
-    canvas.set_draw_color(Color::RGB(255, 255, 255));
-    for (i, pixel) in screen_buf.iter().enumerate() {
-        if *pixel != 0 {
-            let x = (i % 64) as u32;
-            let y = (i / 64) as u32;
-
-            // Draw a rectangle scaled up by 10, in our case
-            let rect = Rect::new((x * 10) as i32, (y * 10) as i32, 10, 10);
-            canvas.fill_rect(rect).unwrap();
-        }
-    }
-    canvas.present();
-}
 
 fn main() {
     // setupGraphics()
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let window = video_subsystem
-        .window("The game", 640, 320)
-        .position_centered()
-        .build()
-        .unwrap();
-
-    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+    let result = screen::setup_screen();
+    let mut canvas = result.0;
+    let mut event_pump = result.1;
     canvas.clear();
     canvas.present();
 
@@ -48,7 +23,17 @@ fn main() {
     chip8.load_rom(rom);
 
     //Emulation loop
-    loop {
+    'gameloop: loop {
+        // Check for Quit event
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. } => {
+                    break 'gameloop;
+                }
+                _ => (),
+            }
+        }
+
         // Emulate one cycle
         chip8.emulate_cycle();
 
@@ -57,7 +42,7 @@ fn main() {
         if chip8.draw_flag {
             chip8.draw_flag = false;
             // draw_graphics();
-            draw_screen(&chip8, &mut canvas);
+            screen::draw_screen(&chip8, &mut canvas);
         }
 
         // Store key press state (press and realease)

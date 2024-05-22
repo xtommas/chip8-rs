@@ -1,15 +1,13 @@
 use core::panic;
 
-use crate::{cpu::Cpu, font};
+use crate::{cpu::Cpu, font, screen};
 
-const DISPLAY_WIDTH: usize = 64;
-const DISPLAY_HEIGHT: usize = 32;
 
 #[derive(Debug)]
 pub struct Chip8 {
     cpu: Cpu,
     memory: [u8; 4096],
-    pub display: [i32; DISPLAY_WIDTH * DISPLAY_HEIGHT],
+    pub display: [i32; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
     keypad: [i32; 16],
     pub draw_flag: bool,
 }
@@ -19,7 +17,7 @@ impl Chip8 {
         let mut chip8 = Chip8 {
             cpu: Cpu::new(),
             memory: [0; 4096],
-            display: [0; DISPLAY_WIDTH * DISPLAY_HEIGHT],
+            display: [0; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
             keypad: [0; 16],
             draw_flag: false,
         };
@@ -50,6 +48,10 @@ impl Chip8 {
         // from memory and combine them into one 16-bit instruction
         let opcode: u16 = u16::from(self.memory[self.cpu.pc as usize]) << 8
             | u16::from(self.memory[self.cpu.pc as usize + 1]);
+
+        // Increment program counter here, to avoid having to do it on every
+        // function for each instruction
+        self.cpu.pc += 2;
 
         // Decode opcode
         //
@@ -133,7 +135,6 @@ impl Chip8 {
             *pixel = 0;
         }
         self.draw_flag = true;
-        self.cpu.pc += 2;
     }
 
     fn return_from_subroutine(&mut self) {
@@ -142,7 +143,6 @@ impl Chip8 {
         // assign that element to the program counter
         self.cpu.sp -= 1;
         self.cpu.pc = self.cpu.stack.pop().expect("Illegal stack access");
-        self.cpu.pc += 2;
     }
 
     fn jump(&mut self, addr: u16) {
@@ -151,23 +151,20 @@ impl Chip8 {
 
     fn load_register_vx(&mut self, reg: u8, val: u8) {
         self.cpu.v[reg as usize] = val;
-        self.cpu.pc += 2;
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
         self.cpu.v[reg as usize] += val;
-        self.cpu.pc += 2;
     }
 
     fn set_index_register(&mut self, val: u16) {
         self.cpu.i = val;
-        self.cpu.pc += 2;
     }
 
     fn draw_sprite_to_screen(&mut self, inst_x: u8, inst_y: u8, n: u8) {
         // Mod by display width (64) or height (32) to wrap around
-        let x = self.cpu.v[inst_x as usize] % 64;
-        let y = self.cpu.v[inst_y as usize] % 32;
+        let x = self.cpu.v[inst_x as usize] % screen::DISPLAY_WIDTH as u8;
+        let y = self.cpu.v[inst_y as usize] % screen::DISPLAY_HEIGHT as u8;
         self.cpu.v[0x0F] = 0;
 
         // Loop trough each row
@@ -191,6 +188,5 @@ impl Chip8 {
         }
 
         self.draw_flag = true;
-        self.cpu.pc += 2;
     }
 }
