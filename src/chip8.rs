@@ -105,6 +105,7 @@ impl Chip8 {
                 self.skip_not_equal(reg, value);
             }
             5 => {
+                // SE Vx, Vy
                 let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
                 let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
                 self.skip_equal_registers(reg1, reg2);
@@ -122,7 +123,12 @@ impl Chip8 {
                 self.add_value_to_register_vx(reg, val);
             }
             8 => {}
-            9 => {}
+            9 => {
+                // SNE Vx, Vy
+                let reg1: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                let reg2: u8 = ((opcode & 0x00F0) >> 4) as u8;
+                self.skip_not_equal_registers(reg1, reg2);
+            }
             10 => {
                 // LD I, addr
                 let val: u16 = (opcode & 0x0FFF) as u16;
@@ -187,6 +193,12 @@ impl Chip8 {
 
     fn skip_equal_registers(&mut self, reg1: u8, reg2: u8) {
         if self.cpu.v[reg1 as usize] == self.cpu.v[reg2 as usize] {
+            self.cpu.pc += 2;
+        }
+    }
+
+    fn skip_not_equal_registers(&mut self, reg1: u8, reg2: u8) {
+        if self.cpu.v[reg1 as usize] != self.cpu.v[reg2 as usize] {
             self.cpu.pc += 2;
         }
     }
