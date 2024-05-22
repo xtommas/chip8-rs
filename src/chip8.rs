@@ -87,7 +87,11 @@ impl Chip8 {
                 let addr = (opcode & 0x0FFF) as u16;
                 self.jump(addr);
             }
-            2 => {}
+            2 => {
+                // CALL addr
+                let addr = (opcode & 0x0FFF) as u16
+                self.call_subroutine(addr);
+            }
             3 => {}
             4 => {}
             5 => {}
@@ -146,6 +150,12 @@ impl Chip8 {
     }
 
     fn jump(&mut self, addr: u16) {
+        self.cpu.pc = addr;
+    }
+
+    fn call_subroutine(&mut self, addr: u16) {
+        self.cpu.sp += 1;
+        self.cpu.stack.push(self.cpu.pc);
         self.cpu.pc = addr;
     }
 
