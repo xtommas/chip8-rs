@@ -89,30 +89,35 @@ impl Chip8 {
             }
             2 => {
                 // CALL addr
-                let addr = (opcode & 0x0FFF) as u16
+                let addr = (opcode & 0x0FFF) as u16;
                 self.call_subroutine(addr);
             }
-            3 => {}
+            3 => {
+                // SE Vx, byte
+                let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                let value: u8 = (opcode & 0x00FF) as u8;
+                self.skip_equal(reg, value);
+            }
             4 => {}
             5 => {}
             6 => {
                 // LD Vx, byte
                 let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
-                let value: u8 = (opcode & 0x00FF) as u8;
-                self.load_register_vx(reg, value);
+                let val: u8 = (opcode & 0x00FF) as u8;
+                self.load_register_vx(reg, val);
             }
             7 => {
                 // ADD Vx, byte
                 let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
-                let value: u8 = (opcode & 0x00FF) as u8;
-                self.add_value_to_register_vx(reg, value);
+                let val: u8 = (opcode & 0x00FF) as u8;
+                self.add_value_to_register_vx(reg, val);
             }
             8 => {}
             9 => {}
             10 => {
                 // LD I, addr
-                let value: u16 = (opcode & 0x0FFF) as u16;
-                self.set_index_register(value);
+                let val: u16 = (opcode & 0x0FFF) as u16;
+                self.set_index_register(val);
             }
             11 => {}
             12 => {}
@@ -157,6 +162,12 @@ impl Chip8 {
         self.cpu.sp += 1;
         self.cpu.stack.push(self.cpu.pc);
         self.cpu.pc = addr;
+    }
+
+    fn skip_equal(&mut self, reg: u8, val: u8) {
+        if self.cpu.v[reg as usize] == val {
+            self.cpu.pc += 2;
+        }
     }
 
     fn load_register_vx(&mut self, reg: u8, val: u8) {
