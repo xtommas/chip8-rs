@@ -142,10 +142,21 @@ impl Chip8 {
                         // XOR Vx, Vy
                         self.xor_registers(reg1, reg2);
                     }
-                    4 => {}
-                    5 => {}
+                    4 => {
+                        // ADD Vx, Vy
+                        self.add_registers(reg1, reg2);
+                    }
+                    5 => {
+                        // SUB Vx, Vy 
+                        // Vx = Vx - Vy
+                        self.subtract_registers(reg1, reg2);
+                    }
                     6 => {}
-                    7 => {}
+                    7 => {
+                        // SUB Vx, Vy 
+                        // Vx = Vy - Vx
+                        self.subtract_registers_in_reverse(reg1, reg2);
+                    }
                     14 => {}
                     _ => panic!("Unknown operation: {:#x}", opcode),
                 }
@@ -248,6 +259,41 @@ impl Chip8 {
 
     fn xor_registers(&mut self, reg1: u8, reg2: u8) {
         self.cpu.v[reg1 as usize] ^= self.cpu.v[reg2 as usize];
+    }
+
+    fn add_registers(&mut self, reg1: u8, reg2: u8) {
+        // The register can't store numbers larger than 255
+        // so, if the sum is larger, we set V[F] (the carry flag)
+        // to 1. In any other case, we set it to 0
+        // Ex: reg1 = 200, reg2 = 70 => 70 > (255 - 200 = 50)  
+        if self.cpu.v[reg2 as usize] > (255 - self.cpu.v[reg1 as usize]) {
+            self.cpu.v[0xF] = 1;
+        } else {
+            self.cpu.v[0xF] = 0;
+        }
+        // Make the sum wrap around.
+        // Meaning, 255 + 1 = 0; 255 + 2 = 1; and so on
+        self.cpu.v[reg1 as usize] = self.cpu.v[reg1 as usize].wrapping_add(self.cpu.v[reg2 as usize]);
+    }
+
+    fn subtract_registers(&mut self, reg1: u8, reg2: u8) {
+        // Vx = Vx - Vy
+        if self.cpu.v[reg1 as usize] > self.cpu.v[reg2 as usize] {
+            self.cpu.v[0xF] = 1;
+        } else {
+            self.cpu.v[0xF] = 0;
+        }
+        self.cpu.v[reg1 as usize] = self.cpu.v[reg1 as usize].wrapping_sub(self.cpu.v[reg2 as usize]);
+    }
+
+    fn subtract_registers_in_reverse(&mut self, reg1: u8, reg2: u8) {
+        // Vx = Vy - Vx
+        if self.cpu.v[reg2 as usize] > self.cpu.v[reg1 as usize] {
+            self.cpu.v[0xF] = 1;
+        } else {
+            self.cpu.v[0xF] = 0;
+        }
+        self.cpu.v[reg1 as usize] = self.cpu.v[reg2 as usize].wrapping_sub(self.cpu.v[reg1 as usize]);
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
