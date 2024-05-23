@@ -1,4 +1,4 @@
-use core::panic;
+use std::panic;
 use crate::{cpu::Cpu, font, screen};
 use rand::Rng;
 
@@ -199,6 +199,7 @@ impl Chip8 {
             }
             14 => {
                 let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
+
                 match (opcode & 0x00F0) >> 4 {
                     9 => {
                         // SKP Vx
@@ -213,6 +214,46 @@ impl Chip8 {
             }
             15 => {
                 let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
+
+                match opcode & 0x00FF {
+                    0x07 => {
+                        // LD Vx, DT
+                        self.set_register_delay_timer(reg);
+                    }
+                    0x0A => {
+                        // LD Vx, K
+                        self.wait_for_key_press(reg);
+                    }
+                    0x15 => {
+                        // LD DT, Vx
+                        self.set_delay_timer_vx(reg);
+                    }
+                    0x18 => {
+                        // LD ST, Vx
+                        self.set_sound_timer_vx(reg);
+                    }
+                    0x1E => {
+                        // ADD I, Vx
+                        self.add_vx_to_index(reg);
+                    }
+                    0x29 => {
+                        // LD F, Vx
+                        self.set_index_from_font(reg);
+                    }
+                    0x33 => {
+                        // LD B, Vx
+                        self.binary_coded_decimal(reg);
+                    }
+                    0x55 => {
+                        // LD [I], Vx
+                        self.store_registers();
+                    }
+                    0x65 => {
+                        // LD Vx, [I]
+                        self.read_registers();
+                    }
+                    _ => panic!("Unknown Fx opcode: {:#x}", opcode)
+                }
             }
             _ => panic!("Unknown opcode: {:#x}", opcode),
         }
@@ -393,4 +434,78 @@ impl Chip8 {
             self.cpu.pc += 2;
         }
     }
-}
+
+    fn set_register_delay_timer(&mut self, reg: u8) {
+        self.cpu.v[reg as usize] = self.cpu.delay_timer;
+    }
+
+    fn set_delay_timer_vx(&mut self, reg: u8) {
+        self.cpu.delay_timer = self.cpu.v[reg as usize];
+    }
+
+    fn set_sound_timer_vx(&mut self, reg: u8) {
+        self.cpu.sound_timer = self.cpu.v[reg as usize];
+    }
+
+    fn add_vx_to_index(&mut self, reg: u8) {
+        let sum = self.cpu.i + self.cpu.v[reg as usize] as u16;
+        if sum > 0xFFF {
+            self.cpu.v[0xF] = 1;
+        } else {
+            self.cpu.v[0xF] = 0;
+        }
+        self.cpu.i = sum;
+    }
+
+    fn wait_for_key_press(&mut self, reg: u8) {
+        let mut key_pressed = false;
+        for i in 0..self.keypad.len() {
+            if self.keypad[i] != 0 {
+                self.cpu.v[reg as usize] = i as u8;
+                key_pressed = true;
+                break;
+            }
+        }
+
+        if !key_pressed {
+            // Since we incremented the program counter
+            // after we fetched the instruction, we need to 
+            // roll it back if no key was pressed
+            self.cpu.pc -= 2;
+        }
+    }
+
+    fn set_index_from_font(&mut self, reg: u8) {
+        // Each font sprite is 5 bytes, so their RAM address
+        // is their value times 5.
+        //
+        // Since we stored the fonts starting at memory
+        // position 80, we need to offset by that amount
+        // to get the character.
+        self.cpu.i = ((self.cpu.v[reg as usize] * 5) + 80) as u16;
+    }
+
+    fn binary_coded_decimal(&mut self, reg: u8) {
+        let vx = self.cpu.v[reg as usize] as f32;
+
+        let hundreds = (vx / 100.0).floor() as u8;
+        let tens = ((vx / 10.0) % 10.0).floor() as u8;
+        let ones = (vx % 10.0) as u8;
+
+        self.memory[self.cpu.i as usize] = hundreds;
+        self.memory[(self.cpu.i + 1) as usize] = tens;
+        self.memory[(self.cpu.i + 2) as usize] = ones;
+    }
+
+    fn store_registers(&mut self) {
+        for i in 0..self.cpu.v.len() {
+            self.memory[(i as u16 + self.cpu.i) as usize] = self.cpu.v[i];
+        }
+    }
+
+    fn read_registers(&mut self) {
+        for i in 0..self.cpu.v.len() {
+            self.cpu.v[i] = self.memory[(self.cpu.i + i as u16) as usize];
+        }
+    }
+} 
