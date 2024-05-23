@@ -1,5 +1,6 @@
 use core::panic;
 use crate::{cpu::Cpu, font, screen};
+use rand::Rng;
 
 
 #[derive(Debug)]
@@ -183,7 +184,12 @@ impl Chip8 {
                 let addr = (opcode & 0x0FFF) as u16;
                 self.jump_plus_v0(addr);
             }
-            12 => {}
+            12 => {
+                // RND Vx, byte
+                let reg = ((opcode & 0x0F00) >> 8) as u8;
+                let val = (opcode & 0x00FF) as u8;
+                self.set_register_random(reg, val);
+            }
             13 => {
                 // DXYN (draw srpite to the screen)
                 let n = (opcode & 0x000F) as u8;
@@ -191,8 +197,23 @@ impl Chip8 {
                 let y = ((opcode & 0x00F0) >> 4) as u8;
                 self.draw_sprite_to_screen(x, y, n);
             }
-            14 => {}
-            15 => {}
+            14 => {
+                let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
+                match (opcode & 0x00F0) >> 4 {
+                    9 => {
+                        // SKP Vx
+                        self.skip_key_pressed(reg);
+                    }
+                    10 => {
+                        // SKNP Vx
+                        self.skip_key_not_pressed(reg);
+                    }
+                    _ => panic!("Unknown Ex opcode: {:#x}", opcode)
+                }
+            }
+            15 => {
+                let reg: u8 = ((opcode & 0x0F00) >> 8) as u8;
+            }
             _ => panic!("Unknown opcode: {:#x}", opcode),
         }
 
@@ -324,9 +345,12 @@ impl Chip8 {
         self.cpu.v[reg as usize] += val;
     }
 
-
     fn set_index_register(&mut self, val: u16) {
         self.cpu.i = val;
+    }
+
+    fn set_register_random(&mut self, reg: u8, val: u8) {
+        self.cpu.v[reg as usize] = rand::thread_rng().gen_range(0..255) & val;
     }
 
     fn draw_sprite_to_screen(&mut self, inst_x: u8, inst_y: u8, n: u8) {
@@ -356,5 +380,17 @@ impl Chip8 {
         }
 
         self.draw_flag = true;
+    }
+
+    fn skip_key_pressed(&mut self, reg: u8) {
+        if self.keypad[self.cpu.v[reg as usize] as usize] != 0 {
+            self.cpu.pc += 2;
+        }
+    }
+
+    fn skip_key_not_pressed(&mut self, reg: u8) {
+        if self.keypad[self.cpu.v[reg as usize] as usize] == 0 {
+            self.cpu.pc += 2;
+        }
     }
 }
