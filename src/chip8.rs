@@ -178,7 +178,11 @@ impl Chip8 {
                 let val: u16 = (opcode & 0x0FFF) as u16;
                 self.set_index_register(val);
             }
-            11 => {}
+            11 => {
+                // JP V0, addr
+                let addr = (opcode & 0x0FFF) as u16;
+                self.jump_plus_v0(addr);
+            }
             12 => {}
             13 => {
                 // DXYN (draw srpite to the screen)
@@ -215,6 +219,10 @@ impl Chip8 {
 
     fn jump(&mut self, addr: u16) {
         self.cpu.pc = addr;
+    }
+
+    fn jump_plus_v0(&mut self, addr: u16) {
+        self.cpu.pc = addr + (self.cpu.v[0] as u16);
     }
 
     fn call_subroutine(&mut self, addr: u16) {
