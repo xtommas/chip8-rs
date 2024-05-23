@@ -246,11 +246,11 @@ impl Chip8 {
                     }
                     0x55 => {
                         // LD [I], Vx
-                        self.store_registers();
+                        self.store_registers(reg);
                     }
                     0x65 => {
                         // LD Vx, [I]
-                        self.read_registers();
+                        self.read_registers(reg);
                     }
                     _ => panic!("Unknown Fx opcode: {:#x}", opcode)
                 }
@@ -466,7 +466,6 @@ impl Chip8 {
                 break;
             }
         }
-
         if !key_pressed {
             // Since we incremented the program counter
             // after we fetched the instruction, we need to 
@@ -481,7 +480,7 @@ impl Chip8 {
         //
         // Since we stored the fonts starting at memory
         // position 80, we need to offset by that amount
-        // to get the character.
+        // to get the character
         self.cpu.i = ((self.cpu.v[reg as usize] * 5) + 80) as u16;
     }
 
@@ -497,15 +496,15 @@ impl Chip8 {
         self.memory[(self.cpu.i + 2) as usize] = ones;
     }
 
-    fn store_registers(&mut self) {
-        for i in 0..self.cpu.v.len() {
-            self.memory[(i as u16 + self.cpu.i) as usize] = self.cpu.v[i];
+    fn store_registers(&mut self, reg: u8) {
+        for i in 0..=reg {
+            self.memory[(i as u16 + self.cpu.i) as usize] = self.cpu.v[i as usize];
         }
     }
 
-    fn read_registers(&mut self) {
-        for i in 0..self.cpu.v.len() {
-            self.cpu.v[i] = self.memory[(self.cpu.i + i as u16) as usize];
+    fn read_registers(&mut self, reg: u8) {
+        for i in 0..=reg {
+            self.cpu.v[i as usize] = self.memory[(self.cpu.i + i as u16) as usize];
         }
     }
 } 
