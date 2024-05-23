@@ -151,13 +151,19 @@ impl Chip8 {
                         // Vx = Vx - Vy
                         self.subtract_registers(reg1, reg2);
                     }
-                    6 => {}
+                    6 => {
+                        // SHR Vx, {, Vy} 
+                        self.shift_register_right(reg1);
+                    }
                     7 => {
                         // SUB Vx, Vy 
                         // Vx = Vy - Vx
                         self.subtract_registers_in_reverse(reg1, reg2);
                     }
-                    14 => {}
+                    14 => {
+                        // SHL Vx, {, Vy}
+                        self.shift_register_left(reg1);
+                    }
                     _ => panic!("Unknown operation: {:#x}", opcode),
                 }
             }
@@ -296,9 +302,20 @@ impl Chip8 {
         self.cpu.v[reg1 as usize] = self.cpu.v[reg2 as usize].wrapping_sub(self.cpu.v[reg1 as usize]);
     }
 
+    fn shift_register_right(&mut self, reg: u8) {
+        self.cpu.v[0xF] = self.cpu.v[reg as usize] & 0x1;
+        self.cpu.v[reg as usize] >>= 1;
+    }
+
+    fn shift_register_left(&mut self, reg: u8) {
+        self.cpu.v[0xF] = (self.cpu.v[reg as usize] >> 7) & 0x1;
+        self.cpu.v[reg as usize] <<= 1;
+    }
+
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
         self.cpu.v[reg as usize] += val;
     }
+
 
     fn set_index_register(&mut self, val: u16) {
         self.cpu.i = val;
