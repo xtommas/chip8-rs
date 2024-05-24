@@ -7,10 +7,9 @@ use rand::Rng;
 pub struct Chip8 {
     cpu: Cpu,
     memory: [u8; 4096],
-    pub display: [u8; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
-    pub keypad: [u8; 16],
+    pub display: [i32; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
+    pub keypad: [i32; 16],
     pub draw_flag: bool,
-    waiting_for_key: Option<u8>,
 }
 
 impl Chip8 {
@@ -21,14 +20,9 @@ impl Chip8 {
             display: [0; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
             keypad: [0; 16],
             draw_flag: false,
-            waiting_for_key: None,
         };
         chip8.load_font_set();
         chip8
-    }
-
-    pub fn keypress(&mut self, idx: usize, pressed: u8) {
-        self.keypad[idx] = pressed;
     }
 
     // Loads the fontset from 0x050 to 0x09F
@@ -264,9 +258,6 @@ impl Chip8 {
             _ => panic!("Unknown opcode: {:#x}", opcode),
         }
 
-    }
-
-    pub fn tick_timers(&mut self) {
         // Update timers
         if self.cpu.delay_timer > 0 {
             self.cpu.delay_timer -= 1;
@@ -423,16 +414,15 @@ impl Chip8 {
             for x_line in 0..8 {
                 // Check if the pixel value is 1
                 if (pixel & (0x80 >> x_line)) != 0 {
-                    let x_coord = (x + x_line) % screen::DISPLAY_WIDTH as u8;
-                    let y_coord = (y + y_line) % screen::DISPLAY_HEIGHT as u8;
-                    let index = (x_coord as usize + y_coord as usize * screen::DISPLAY_WIDTH) % 2048;
-
-                    // Check for collision
-                    if self.display[index] == 1 {
+                    // Get the index for the display array
+                    // (Might not need to wrap around on this one, check later)
+                    let index = ((x + x_line) as usize + ((y + y_line) as usize * 64)) % 2048;
+                    // Check if the pixel is alrady active (collision)
+                    if self.display[index as usize] == 1 {
                         self.cpu.v[0x0F] = 1;
                     }
-                    // XOR the pixel value
-                    self.display[index] ^= 1;
+                    // set the pixel value using XOR
+                    self.display[index as usize] ^= 1;
                 }
             }
         }
