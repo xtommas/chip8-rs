@@ -1,8 +1,11 @@
 use chip8_rs::chip8::Chip8;
+use chip8_rs::keyboard;
 use chip8_rs::screen;
 use core::panic;
 use sdl2::event::Event;
 use std::env;
+
+const TICKS_PER_FRAME: usize = 10;
 
 fn main() {
     // setupGraphics()
@@ -30,12 +33,28 @@ fn main() {
                 Event::Quit { .. } => {
                     break 'gameloop;
                 }
+                Event::KeyDown {
+                    keycode: Some(key), ..
+                } => {
+                    if let Some(k) = keyboard::key_to_button(key) {
+                        chip8.keypad[k] = 1;
+                    }
+                }
+                Event::KeyUp {
+                    keycode: Some(key), ..
+                } => {
+                    if let Some(k) = keyboard::key_to_button(key) {
+                        chip8.keypad[k] = 0;
+                    }
+                }
                 _ => (),
             }
         }
 
         // Emulate one cycle
-        chip8.emulate_cycle();
+        for _ in 0..TICKS_PER_FRAME {
+            chip8.emulate_cycle();
+        }
 
         // if the instructions are 0x00E0 (clear the screen)
         // or 0xDXYN (draw sprite to the screen), update the screen

@@ -8,7 +8,7 @@ pub struct Chip8 {
     cpu: Cpu,
     memory: [u8; 4096],
     pub display: [i32; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
-    keypad: [i32; 16],
+    pub keypad: [i32; 16],
     pub draw_flag: bool,
 }
 
@@ -262,6 +262,13 @@ impl Chip8 {
         if self.cpu.delay_timer > 0 {
             self.cpu.delay_timer -= 1;
         }
+
+        if self.cpu.sound_timer > 0 {
+            if self.cpu.sound_timer == 1 {
+                // Beep
+            }
+            self.cpu.sound_timer -= 1;
+        }
     }
 
     fn clear_display(&mut self) {
@@ -383,7 +390,7 @@ impl Chip8 {
     }
 
     fn add_value_to_register_vx(&mut self, reg: u8, val: u8) {
-        self.cpu.v[reg as usize] += val;
+        self.cpu.v[reg as usize] = self.cpu.v[reg as usize].wrapping_add(val);
     }
 
     fn set_index_register(&mut self, val: u16) {
