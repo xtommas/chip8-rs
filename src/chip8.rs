@@ -10,7 +10,6 @@ pub struct Chip8 {
     pub display: [u8; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
     pub keypad: [u8; 16],
     pub draw_flag: bool,
-    waiting_for_key: Option<u8>,
 }
 
 impl Chip8 {
@@ -21,7 +20,6 @@ impl Chip8 {
             display: [0; screen::DISPLAY_WIDTH * screen::DISPLAY_HEIGHT],
             keypad: [0; 16],
             draw_flag: false,
-            waiting_for_key: None,
         };
         chip8.load_font_set();
         chip8
