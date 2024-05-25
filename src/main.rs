@@ -8,7 +8,7 @@ use std::env;
 use std::thread;
 use std::time::Duration;
 
-const TICKS_PER_FRAME: usize = 16;
+const TICKS_PER_FRAME: usize = 10;
 const FRAME_DURATION: Duration = Duration::from_millis(16); // Targeting ~60 FPS
 
 fn main() {
@@ -72,11 +72,12 @@ fn main() {
 
         // if the instructions are 0x00E0 (clear the screen)
         // or 0xDXYN (draw sprite to the screen), update the screen
-        if chip8.draw_flag {
-            chip8.draw_flag = false;
-            // draw_graphics();
-            screen::draw_screen(&chip8, &mut canvas);
-        }
+        // if chip8.draw_flag {
+        //     chip8.draw_flag = false;
+        //     // draw_graphics();
+        //     screen::draw_screen(&chip8, &mut canvas);
+        // }
+        screen::draw_screen(&chip8, &mut canvas);
 
         // Frame rate control
         let frame_duration = frame_start.elapsed();
