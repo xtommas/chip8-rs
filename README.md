@@ -27,7 +27,7 @@ CHIP-8 has the following components:
 
 ## Usage
 
-You're gonna need to have Rust installed
+You're gonna need to have Rust and SDL2 installed
 
 ```rust
 cargo run [path to rom]
