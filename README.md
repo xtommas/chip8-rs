@@ -35,9 +35,9 @@ cargo run [path to rom]
 
 ### Keypad
 
-The original Chip 8 had a hexadecimal keypad (0 - 9 and A - F). The key mapping are detailed in the following table
+The original CHIP-8 had a hexadecimal keypad (0 - 9 and A - F). The key mappings are detailed in the following table
 
-| Chip 8 Key | Keyboard Key |
+| CHIP-8 Key | Keyboard Key |
 | :--------: | :----------: |
 |    `1`     |     `1`      |
 |    `2`     |     `2`      |
@@ -62,4 +62,4 @@ Here is a list of really helpful resources if you wanna attempt this project you
 
 - [High level CHIP-8 guide, by Tobias V. Langhoff](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#fx0a-get-key)
 - [How to write an emulator (CHIP-8 interpreter)](https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/)
-- [Cowgod's Chip-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
+- [Cowgod's CHIP-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
